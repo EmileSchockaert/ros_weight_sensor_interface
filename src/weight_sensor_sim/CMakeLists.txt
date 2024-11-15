@@ -162,7 +162,6 @@ catkin_install_python(PROGRAMS
   scripts/data_saver.py
   scripts/weight_sensor_color_gradient_ui.py
   scripts/weight_sensor_sim_node.py
-  scripts/weight_sensor_ui.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

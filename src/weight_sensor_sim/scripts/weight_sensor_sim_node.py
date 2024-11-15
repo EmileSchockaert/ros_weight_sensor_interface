@@ -4,29 +4,39 @@ import rospy
 from std_msgs.msg import Float32
 import random
 
-def weight_sensor_sim():
-    rospy.init_node('weight_sensor_sim', anonymous=True)
-    weight_pub = rospy.Publisher('/weight_sensor/data', Float32, queue_size=10)
+class WeightSensorSim:
+    def __init__(self) -> None:
+        rospy.init_node('weight_sensor_sim', anonymous=True)
 
-    rate = rospy.Rate(2)  # 2 Hz
+        self.weight_pubs = {
+            'fx': rospy.Publisher('/weight_sensor/fx', Float32, queue_size=10),
+            'fy': rospy.Publisher('/weight_sensor/fy', Float32, queue_size=10),
+            'fz': rospy.Publisher('/weight_sensor/fz', Float32, queue_size=10),
+        }
 
-    while not rospy.is_shutdown():
-        # Simulate dummy weight data (e.g., random float in range 0 to 50)
-        mu = 2  # mean
-        sigma = 1  # standard deviation
-        simulated_weight = random.gauss(mu, sigma)
-        if simulated_weight < 0:
-            simulated_weight = 0
-        rospy.loginfo(f"Publishing simulated weight: {simulated_weight}")
-        
-        # Publish the simulated weight
-        weight_pub.publish(simulated_weight)
-        
-        # Sleep to maintain the loop rate
-        rate.sleep()
+        self.rate = rospy.Rate(2)  # 2 Hz
+
+    def simulate_weight_forces(self):
+        while not rospy.is_shutdown():
+            # Simulate dummy weight data
+            mu = 2  # mean
+            sigma = 1  # standard deviation
+            
+            for force, weight_pub in self.weight_pubs.items():
+
+                simulated_weight = random.gauss(mu, sigma)
+                if simulated_weight < 0:
+                    simulated_weight = 0
+                weight_pub.publish(simulated_weight)
+                
+                rospy.loginfo(f"Sensor weight: {force} = {simulated_weight:.2f} Newtons")
+            
+            # Sleep to maintain the loop rate
+            self.rate.sleep()
 
 if __name__ == '__main__':
     try:
-        weight_sensor_sim()
+        weight_sensor_sim = WeightSensorSim()
+        weight_sensor_sim.simulate_weight_forces()
     except rospy.ROSInterruptException:
         pass

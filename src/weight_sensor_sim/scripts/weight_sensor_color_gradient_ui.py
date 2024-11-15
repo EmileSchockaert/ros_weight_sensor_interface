@@ -10,10 +10,12 @@ class ForceRiskUI:
         self.root = root
         self.root.title("Force Risk Indicator")
 
-        self.x_data = 0 # Initial position of the indicator arrow
-        self.current_position = 0 # Current position of the indicator arrow
-        self.target_position = 0 # Target position of the indicator arrow
-        
+        self.fx = 0
+        self.fy = 0
+        self.fz = 0
+        self.current_position = 0
+        self.target_position = 0
+
         # Create a figure for the color gradient
         self.fig, self.ax = plt.subplots(figsize=(8, 2))
         self.fig.subplots_adjust(bottom=0.5, top=0.8, left=0.1, right=0.9)
@@ -35,16 +37,33 @@ class ForceRiskUI:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
         self.canvas.get_tk_widget().pack()
 
-        # Set up ROS subscriber
-        rospy.Subscriber('/weight_sensor/data', Float32, self.callback)
+        # Set up ROS subscribers
+        rospy.Subscriber('/weight_sensor/fx', Float32, self.callback_fx)
+        rospy.Subscriber('/weight_sensor/fy', Float32, self.callback_fy)
+        rospy.Subscriber('/weight_sensor/fz', Float32, self.callback_fz)
 
         # Start updating the indicator
         self.update_indicator()
 
-    def callback(self, msg):
-        self.x_data = msg.data
-        # Map force value to 0-255 for color bar positioning
-        self.target_position = max(0, min(255, int((self.x_data / 8) * 255)))
+    def callback_fx(self, msg):
+        self.fx = msg.data
+        self.update_target_position()
+
+    def callback_fy(self, msg):
+        self.fy = msg.data
+        self.update_target_position()
+
+    def callback_fz(self, msg):
+        self.fz = msg.data
+        self.update_target_position()
+
+    def calculate_total_force(self):
+        return np.power(self.fx**2 + self.fy**2 + self.fz**2, 0.5)
+
+    def update_target_position(self):
+        total_force = self.calculate_total_force()
+        # Map total force value to 0-255 for color bar positioning
+        self.target_position = max(0, min(255, int((total_force / 8) * 255)))
 
     def update_indicator(self):
         # Smoothly move the current position towards the target position
