@@ -17,7 +17,9 @@ class DataSaver:
         rospy.Subscriber('/weight_sensor/data', Float32, self.callback)
 
         # Open CSV file in append mode
-        self.csv_file = open('weight_sensor_data.csv', mode='a', newline='')
+        date = datetime.now().strftime('%Y%m%d_%H:%M:%S')
+        csv_filename = f'weight_sensor_data_{date}.csv'
+        self.csv_file = open(csv_filename, mode='a', newline='')
         self.csv_writer = csv.writer(self.csv_file)
 
         # Write header to CSV if file is empty
